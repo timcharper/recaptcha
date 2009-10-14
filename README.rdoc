@@ -19,7 +19,7 @@ are so inclined (see below). Exceptions will be raised if you call these methods
 
 reCAPTCHA for Rails can be installed as a gem:
 
-  config.gem "ambethia-recaptcha", :lib => "recaptcha/rails", :source => "http://gems.github.com"
+  config.gem "recaptcha", :source => "http://gemcutter.org"
 
 Or, as a standard rails plugin:
 
@@ -35,7 +35,6 @@ a pair. You can pass in your keys as options at runtime, for example:
 and later,
 
   verify_recaptcha :private_key => '6Lc6BAAAAAAAAKN3DRm6VA_xxxxxxxxxxxxxxxxx'
-
 
 Or, preferably, you can keep your keys out of your code base by exporting the environment variables
 mentioned earlier. You might do this in the .profile/rc, or equivalent for the user running your
