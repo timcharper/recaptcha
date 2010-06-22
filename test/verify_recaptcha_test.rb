@@ -1,9 +1,12 @@
 require 'test/unit'
+require 'rubygems'
 require 'rails/version' # For getting the rails version constants
 require 'active_support/vendor' # For loading I18n
 require 'mocha'
 require 'net/http'
 require File.dirname(__FILE__) + '/../lib/recaptcha'
+require File.dirname(__FILE__) + '/test_helper'
+
 
 class RecaptchaVerifyTest < Test::Unit::TestCase
   def setup
@@ -33,48 +36,49 @@ class RecaptchaVerifyTest < Test::Unit::TestCase
     expect_http_post(response_with_body("false\ninvalid-site-private-key"))
 
     assert !@controller.verify_recaptcha    
-    assert_equal "invalid-site-private-key", @controller.session[:recaptcha_error]
+    assert_equal "invalid-site-private-key", @controller.recaptcha_error
   end
   
   def test_returns_true_on_success
-    @controller.session[:recaptcha_error] = "previous error that should be cleared"    
+    @controller.recaptcha_error = "previous error that should be cleared"
     expect_http_post(response_with_body("true\n"))
 
     assert @controller.verify_recaptcha
-    assert_nil @controller.session[:recaptcha_error]
+    assert_nil @controller.recaptcha_error
   end
   
   def test_errors_should_be_added_to_model
     expect_http_post(response_with_body("false\nbad-news"))
     
     errors = mock
-    errors.expects(:add).with(:base, "Captcha response is incorrect, please try again.")
+    errors.expects(:add).with(:base, Recaptcha::Verify::RECAPTCHA_VALIDATION_FAILED_MESSAGE)
     model = mock(:valid? => false, :errors => errors)
 
     assert !@controller.verify_recaptcha(:model => model)
-    assert_equal "bad-news", @controller.session[:recaptcha_error]
+    assert_equal "bad-news", @controller.recaptcha_error
   end
 
   def test_returns_true_on_success_with_optional_key
-    @controller.session[:recaptcha_error] = "previous error that should be cleared"
+    @controller.recaptcha_error = "previous error that should be cleared"
     # reset private key
     @expected_post_data["privatekey"] =  'ADIFFERENTPRIVATEKEYXXXXXXXXXXXXXX'
     expect_http_post(response_with_body("true\n"))
 
     assert @controller.verify_recaptcha(:private_key => 'ADIFFERENTPRIVATEKEYXXXXXXXXXXXXXX')
-    assert_nil @controller.session[:recaptcha_error]
+    assert_nil @controller.recaptcha_error
   end
 
   def test_timeout
     expect_http_post(Timeout::Error, :exception => true)
     assert !@controller.verify_recaptcha()
-    assert_equal "recaptcha-not-reachable", @controller.session[:recaptcha_error]
+    assert_equal "recaptcha-not-reachable", @controller.recaptcha_error
   end
 
   private
 
   class TestController
     include Recaptcha::Verify
+    include TestErrorWriters
     attr_accessor :request, :params, :session
     
     def initialize

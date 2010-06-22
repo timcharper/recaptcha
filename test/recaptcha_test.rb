@@ -1,11 +1,13 @@
 require 'test/unit'
 require 'cgi'
 require File.dirname(__FILE__) + '/../lib/recaptcha'
+require File.dirname(__FILE__) + '/test_helper'
 
 class RecaptchaClientHelperTest < Test::Unit::TestCase
   include Recaptcha
   include Recaptcha::ClientHelper
   include Recaptcha::Verify
+  include TestErrorWriters
 
   attr_accessor :session
 
