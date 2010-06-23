@@ -5,7 +5,7 @@ require 'recaptcha'
 module Recaptcha::RailsErrorAccessors
   def self.included(klass)
     klass.cattr_accessor(:redirect_after_captcha_fail)
-    helper_method :recaptcha_error
+    klass.helper_method :recaptcha_error
   end
 
   def recaptcha_error=(error_code)

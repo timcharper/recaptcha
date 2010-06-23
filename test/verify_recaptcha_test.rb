@@ -48,14 +48,14 @@ class RecaptchaVerifyTest < Test::Unit::TestCase
   end
   
   def test_errors_should_be_added_to_model
-    expect_http_post(response_with_body("false\nbad-news"))
+    expect_http_post(response_with_body("false\nincorrect-captcha-sol"))
     
     errors = mock
-    errors.expects(:add).with(:base, Recaptcha::Verify::RECAPTCHA_VALIDATION_FAILED_MESSAGE)
+    errors.expects(:add).with(:base, Recaptcha::ERROR_MESSAGES["incorrect-captcha-sol"])
     model = mock(:valid? => false, :errors => errors)
 
     assert !@controller.verify_recaptcha(:model => model)
-    assert_equal "bad-news", @controller.recaptcha_error
+    assert_equal "incorrect-captcha-sol", @controller.recaptcha_error
   end
 
   def test_returns_true_on_success_with_optional_key

@@ -44,5 +44,9 @@ module Recaptcha
       end
       html.respond_to?(:html_safe) ? html.html_safe : html
     end
+
+    def recaptcha_error_message
+      Recaptcha::ERROR_MESSAGES[recaptcha_error] if recaptcha_error
+    end
   end
 end

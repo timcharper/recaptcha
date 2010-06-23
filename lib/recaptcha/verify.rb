@@ -1,8 +1,5 @@
 module Recaptcha
   module Verify
-    RECAPTCHA_TIMEOUT_ERROR = "recaptcha-not-reachable"
-    RECAPTCHA_TIMEOUT_MESSAGE = "Oops, we failed to validate your word verification response. Please try again."
-    RECAPTCHA_VALIDATION_FAILED_MESSAGE = "Word verification response is incorrect, please try again."
 
     def send_recaptcha_verification_request(remote_ip, challenge, response, private_key = nil, timeout = 3)
       private_key ||= ENV['RECAPTCHA_PRIVATE_KEY']
@@ -25,7 +22,7 @@ module Recaptcha
           [false, error]
         end
       rescue Timeout::Error 
-        [false, RECAPTCHA_TIMEOUT_ERROR]
+        [false, Recaptcha::TIMEOUT_ERROR]
       rescue Exception => e
         raise RecaptchaError, e.message, e.backtrace
       end
@@ -52,21 +49,15 @@ module Recaptcha
       if ! success && options[:model]
         add_recaptcha_model_errors(options[:model],
                                    options[:attribute],
-                                   :timeout_message => options[:timeout_message] || options[:message], # TODO: deprecate options[:message], not specific enough.
-                                   :validation_failed_message => options[:validation_failed_message] || options[:message])
+                                   options[:error_messages] || Recaptcha::ERROR_MESSAGES)
       end
       success
     end
 
     # I'm inclined to believe this is a bad idea: it causes many problem for model validation domain to be considered here. Including for backwards compatibility
-    def add_recaptcha_model_errors(model, attribute, options = {})
-      attribute ||= :base
+    def add_recaptcha_model_errors(model, attribute, error_messages)
       model.valid? # invoke validation
-      if recaptcha_error == RECAPTCHA_TIMEOUT_ERROR
-        model.errors.add attribute, options[:timeout_message] || RECAPTCHA_TIMEOUT_MESSAGE
-      else
-        model.errors.add attribute, options[:validation_failed_message] || RECAPTCHA_VALIDATION_FAILED_MESSAGE
-      end
+      model.errors.add((attribute || :base), (error_messages[recaptcha_error] || "The following error code occurred: #{recaptcha_error}"))
     end
   end # Verify
 end # Recaptcha
